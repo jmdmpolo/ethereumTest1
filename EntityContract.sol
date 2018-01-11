@@ -18,76 +18,85 @@ function kill() public
 }
 
 //struct for status
-struct Status {
-    address userAddress;// user address that registered this status
-    uint dataTime;      // timestamp when this entity was registered
-    string status;      //status name
+struct Status {    
+    address userAddress;   // user address that registered this status
+    uint dataTime;         // timestamp when this entity was registered
+    string status;         // status name
 }
 //struct for Entity
 struct Entity {
-	address userAddress;        // user address that registered this entity
+    string entityAddress; 	// entity address (reference code)
+    address userAddress;        // user address that registered this entity
     uint dataTime;              // timestamp when this entity was registered
     uint statusNumber;          // number of status
     mapping (uint => Status) statuses ; // array of status
 }
 //internal arrays
-mapping (bytes32 => Entity ) private entities ; // array of entities
+mapping (uint256 => Entity ) private entities ; // array of entities
+mapping (string => uint256 ) private entitiesbyRef ; // array of entities ids using address as index
 
 //crea una entidad
-function createEntity(bytes32 entityAddress) public returns (bool) 
+function createEntity(uint256 entityId, string entityAddress) public returns (bool) 
 {
     //comprueba que no exista ya
     //recupera la entidad
-    Entity memory a = entities[entityAddress];
+    Entity memory a = entities[entityId];
     //si existe da error
     require(a.dataTime == 0);
     
-	entities[entityAddress].dataTime = now; //tiempo de creacion
-    entities[entityAddress].userAddress = msg.sender; //usuario que lanza la transaccion
-    entities[entityAddress].statusNumber = 0;
+	//crea la entidad
+	entities[entityId].entityAddress = entityAddress; 
+	entities[entityId].dataTime = now; //tiempo de creacion
+    entities[entityId].userAddress = msg.sender; //usuario que lanza la transaccion
+    entities[entityId].statusNumber = 0;
+	
+	//completa el array por referencia
+	entitiesbyRef[entityAddress] = entityId;
     
     return true;
 }
 
 //crea un estado
-function createEntityStatus(bytes32 entityAddress, string _status) public returns (bool) 
+function createEntityStatus(uint256 entityId, uint256 statusId, string _status) public returns (bool) 
 {
-    //si no existe la esntidad da error
-    require(entities[entityAddress].dataTime != 0);
+    //si no existe la entidad da error
+    require(entities[entityId].dataTime != 0);
+	//si  existe el estatus id da error
+	require(entities[entityId].statuses[statusId].dataTime == 0);
     
-    entities[entityAddress].statusNumber++;
+    entities[entityId].statusNumber++;
     
-    entities[entityAddress].statuses[entities[entityAddress].statusNumber].userAddress = msg.sender; //usuario que lanza la transaccion
-    entities[entityAddress].statuses[entities[entityAddress].statusNumber].dataTime = now;
-    entities[entityAddress].statuses[entities[entityAddress].statusNumber].status = _status;
+    entities[entityId].statuses[statusId].userAddress = msg.sender; //usuario que lanza la transaccion
+    entities[entityId].statuses[statusId].dataTime = now;
+    entities[entityId].statuses[statusId].status = _status;
     
     return true;
 }
 
 //recupera los datos de una entidad
-function getEntity(bytes32 entityAddress) public view returns (uint, address, uint) {
-	 //recupera la entidad
-    Entity memory a = entities[entityAddress];
+function getEntity(uint256 entityId) public view returns (string, uint256, address, uint256) {
+
     //si no existe da error
-    require(a.dataTime != 0);
+    require(entities[entityId].dataTime != 0);
     
     //si existe devuelve sus datos
-    return (a.dataTime,a.userAddress, a.statusNumber);
+    return (entities[entityId].entityAddress , entities[entityId].dataTime,entities[entityId].userAddress, entities[entityId].statusNumber);
 }
 
-//recupera los estados de una entidad
-function getEntityStatus(bytes32 entityAddress, uint _statusNumber) public view returns (address, uint, string ) {
-	 //recupera la entidad
-    //Entity memory a = entities[entityAddress];
-    //si no existe da error
-    //assert(a.dataTime == 0);
-    require(entities[entityAddress].dataTime != 0);
-    
-    //Status memory b = statuses[_statusNumber];
+//recupera los datos de una entidad a partir de su referencia
+function getEntityByRef(string entityAddress) public view returns (string, uint256, address, uint256) {
+	
+	return getEntity(entitiesbyRef[entityAddress]);
+	
+}
+
+//recupera uno de los estados de una entidad
+function getEntityStatus(uint256 entityId, uint256 statusId) public view returns (address, uint256, string ) {
+
+    require(entities[entityId].dataTime != 0);
     
     //si existe devuelve sus datos
-    return (entities[entityAddress].statuses[_statusNumber].userAddress, entities[entityAddress].statuses[_statusNumber].dataTime, entities[entityAddress].statuses[_statusNumber].status);
+    return (entities[entityId].statuses[statusId].userAddress, entities[entityId].statuses[statusId].dataTime, entities[entityId].statuses[statusId].status);
 }
-
 
 } //end contract
