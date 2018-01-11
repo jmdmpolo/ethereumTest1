@@ -76,7 +76,7 @@ function getEntity(bytes32 entityAddress) public view returns (uint, address, ui
 }
 
 //recupera los estados de una entidad
-function getEntityStatus(bytes32 entityAddress, uint _statusNumber) public view returns (Status) {
+function getEntityStatus(bytes32 entityAddress, uint _statusNumber) public view returns (address, uint, string ) {
 	 //recupera la entidad
     //Entity memory a = entities[entityAddress];
     //si no existe da error
@@ -86,7 +86,7 @@ function getEntityStatus(bytes32 entityAddress, uint _statusNumber) public view 
     //Status memory b = statuses[_statusNumber];
     
     //si existe devuelve sus datos
-    return (entities[entityAddress].statuses[_statusNumber]);
+    return (entities[entityAddress].statuses[_statusNumber].userAddress, entities[entityAddress].statuses[_statusNumber].dataTime, entities[entityAddress].statuses[_statusNumber].status);
 }
 
 
