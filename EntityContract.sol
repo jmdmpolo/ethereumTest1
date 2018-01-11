@@ -1,6 +1,22 @@
 pragma solidity ^0.4.18;
 
 contract EntityContract{
+    
+address private creator;    
+
+//constructor
+function EntityContract() public 
+{
+    creator = msg.sender; 
+}
+
+//Standard kill() function to recover funds 
+function kill() public
+{ 
+    if (msg.sender == creator)
+        selfdestruct(creator);  // kills this contract and sends remaining funds back to creator
+}
+
 //struct for status
 struct Status {
     address userAddress;// user address that registered this status
@@ -49,14 +65,14 @@ function createEntityStatus(bytes32 entityAddress, string _status) public return
 }
 
 //recupera los datos de una entidad
-function getEntity(bytes32 entityAddress) public view returns (uint, address) {
+function getEntity(bytes32 entityAddress) public view returns (uint, address, uint) {
 	 //recupera la entidad
     Entity memory a = entities[entityAddress];
     //si no existe da error
     require(a.dataTime != 0);
     
     //si existe devuelve sus datos
-    return (a.dataTime,a.userAddress);
+    return (a.dataTime,a.userAddress, a.statusNumber);
 }
 
 //recupera los estados de una entidad
@@ -72,5 +88,6 @@ function getEntityStatus(bytes32 entityAddress, uint _statusNumber) public view 
     //si existe devuelve sus datos
     return (entities[entityAddress].statuses[_statusNumber]);
 }
+
 
 } //end contract
